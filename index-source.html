@@ -11,37 +11,44 @@
 <main class="game">
   <header class="bar">
     <div class="mark" aria-hidden="true">✦</div>
-    <div class="brand"><b>PARCEL PRESS</b><span>THE WRAPPING DESK</span></div>
-    <button id="sound" class="icon" aria-label="Mute sound" aria-pressed="false">♪</button>
-    <button id="orders" class="icon" aria-label="Open orders">▤</button>
+    <div class="brand"><b>PARCEL PRESS</b></div>
+    <button id="orders" class="icon" aria-label="Open menu">☰</button>
   </header>
   <section class="intro" aria-label="Current order">
-    <div><div class="eyebrow" id="orderId"></div><h1 id="title"></h1><p id="recipient"></p></div>
-    <div class="counter"><b id="count">0 / 4</b><span id="countLabel">FOLDED</span></div>
+    <div class="orderHeading"><span id="orderId"></span><h1 id="title"></h1></div>
+    <b class="counter" id="count" aria-label="Folds completed">0 / 4</b>
   </section>
   <section class="desk" id="desk" aria-label="Wrapping board">
     <canvas id="table" aria-hidden="true"></canvas>
-    <span class="deskTag">PRESS No. 04</span>
-    <span class="paperTag" id="paperTag"></span>
     <div id="flaps" class="flaps"></div>
     <div id="dropTarget" class="dropTarget" hidden aria-hidden="true"><i></i></div>
     <div id="heldSeal" class="heldSeal" hidden aria-hidden="true">✦</div>
     <div class="toast" id="toast" role="status"></div>
   </section>
   <section class="dock" aria-label="Wrapping instructions">
-    <div class="ticket">
-      <div><div class="eyebrow" id="step">01 / FOLD</div><h2 id="instruction">Fold the paper in.</h2></div>
-      <span id="ticketMark" class="ticketMark" aria-hidden="true">↗</span>
-      <p id="clue"></p><div id="ruleIcons" class="rules" aria-label="Stacking order"></div>
-    </div>
-    <div class="actions">
-      <button id="paper" class="quiet">Paper</button><button id="restart" class="quiet">Restart</button>
-      <button id="stamp" class="primary" hidden>✦ &nbsp; Seal parcel</button>
-      <button id="receipt" class="primary" hidden>View receipt</button>
-    </div>
+    <p id="clue"></p>
+    <div id="ruleIcons" class="rules" aria-label="Stacking order"></div>
+    <button id="stamp" class="primary" hidden>Seal</button>
+    <button id="receipt" class="primary" hidden>Receipt</button>
   </section>
 </main>
-<dialog id="menu"><div class="dialogHead"><div><div class="eyebrow" id="menuEyebrow"></div><h2 id="menuTitle"></h2></div><button id="close" class="icon" aria-label="Close menu">×</button></div><div id="menuBody"></div></dialog>
-<dialog id="result"><div class="receipt"><div class="eyebrow">DISPATCH RECEIPT</div><h2 id="resultTitle"></h2><p class="stars" id="stars"></p><p id="details"></p><div class="resultActions"><button id="next" class="primary">Next order →</button><button id="again" class="quiet">Wrap again</button><button id="back" class="quiet">Desk</button></div></div></dialog>
+<dialog id="menu" aria-labelledby="menuTitle">
+  <div class="dialogHead"><h2 id="menuTitle"></h2><button id="close" class="icon" aria-label="Close menu">×</button></div>
+  <div id="menuTools" class="menuTools">
+    <button id="paper" class="quiet">Paper</button>
+    <button id="sound" class="quiet" aria-pressed="false">Sound on</button>
+    <button id="restart" class="quiet">Restart</button>
+  </div>
+  <div id="menuBody"></div>
+</dialog>
+<dialog id="result" aria-labelledby="resultTitle">
+  <div class="receipt">
+    <button id="back" class="icon" aria-label="Close receipt">×</button>
+    <h2 id="resultTitle"></h2>
+    <p class="stars" id="stars"></p>
+    <p id="details"></p>
+    <button id="next" class="primary">Next →</button>
+  </div>
+</dialog>
 <script type="module" src="app.mjs"></script>
 </body></html>

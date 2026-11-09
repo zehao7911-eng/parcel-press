@@ -101,21 +101,20 @@ function positionControls() {
 
 function update() {
   const job=C.jobs[parcel.job], count=parcel.folds.length, done=!!parcel.seal;
-  byId('orderId').textContent=String(parcel.job+1).padStart(2,'0')+' / 08   ·   '+job.kind;
+  byId('orderId').textContent=String(parcel.job+1).padStart(2,'0');
   byId('title').textContent=job.name;
-  byId('recipient').textContent='Prepared for '+job.to;
   byId('count').textContent=done ? '✓' : count+' / 4';
-  byId('countLabel').textContent=done?'SEALED':'FOLDED';
-  byId('paperTag').textContent=C.papers[parcel.paper].name.toUpperCase();
-  byId('step').textContent=done?'03 / DISPATCH':count===4?'02 / SEAL':'01 / FOLD';
-  byId('instruction').textContent=done?'Ready for delivery.':count===4?'Seal the seam.':'Fold the paper in.';
-  byId('clue').textContent=done?'Your parcel and stars are saved.':count===4?'Drag the seal to the dotted circle, or tap to center it.':'Drag or tap a symbol to fold. Bottom layers go first.';
-  byId('ticketMark').textContent=done?'✓':count===4?'✦':'↗';
+  byId('count').setAttribute('aria-label',done?'Sealed':count+' of 4 folds completed');
+  byId('clue').textContent=done?'Sealed':count===4?'Drag to the circle or tap Seal.':'Tap or drag to fold.';
   byId('ruleIcons').replaceChildren();
   if(count<4) for (const [above, below] of job.over) {
     const rule=document.createElement('span');
     rule.className='rule';
-    rule.textContent=C.glyphs[below]+' '+C.symbols[below]+' → '+C.glyphs[above]+' '+C.symbols[above];
+    const label=C.symbols[below]+' before '+C.symbols[above];
+    rule.setAttribute('aria-label',label);
+    rule.setAttribute('role','img');
+    rule.title=label;
+    rule.textContent=C.glyphs[below]+' → '+C.glyphs[above];
     byId('ruleIcons').append(rule);
   }
   flapButtons.forEach((button,i)=>{
@@ -125,9 +124,8 @@ function update() {
   byId('dropTarget').hidden=count!==4||done;
   byId('stamp').hidden=count!==4||done;
   byId('receipt').hidden=!done;
-  byId('sound').setAttribute('aria-pressed',String(profile.mute));
-  byId('sound').setAttribute('aria-label',profile.mute?'Unmute sound':'Mute sound');
-  byId('sound').textContent=profile.mute?'♩':'♪';
+  byId('sound').setAttribute('aria-pressed',String(!profile.mute));
+  byId('sound').textContent=profile.mute?'Sound off':'Sound on';
   positionControls();
 }
 
@@ -142,7 +140,8 @@ function commitFold(flap) {
     announce(C.symbols[flap]+' goes over '+outcome.missing.map(i=>C.symbols[i]).join(' and ')+'.');
     return;
   }
-  announce(C.symbols[flap]+' tucked');
+  clearTimeout(toastTimer);
+  byId('toast').textContent='';
   notes('paper');
   animate(flap,1,420);
   const [x,y]=table.marker(C.jobs[parcel.job],flap);
@@ -175,7 +174,7 @@ function showResult() {
   const detail=parcel.slips ? parcel.slips+' stacking '+(parcel.slips===1?'slip':'slips') : 'Clean folds';
   const alignment=Math.hypot(...parcel.seal)<=.30?'centered seal':'seal attached';
   byId('details').textContent=detail+' · '+alignment;
-  byId('next').textContent=parcel.job===C.jobs.length-1?'All orders →':'Next order →';
+  byId('next').textContent=parcel.job===C.jobs.length-1?'Orders →':'Next →';
   byId('result').showModal();
 }
 
@@ -195,8 +194,10 @@ function resetParcel(index,preservePaper=false) {
 
 function fillMenu() {
   const orderMode=menuMode==='orders';
-  byId('menuEyebrow').textContent=orderMode?'DISPATCH BOOK':'PAPER DRAWER';
-  byId('menuTitle').textContent=orderMode?C.total(profile)+' / 24 stars':'Choose your paper';
+  byId('menuTitle').textContent=orderMode?'Orders · '+C.total(profile)+' / 24 ★':'Paper';
+  byId('menuTools').hidden=!orderMode;
+  byId('close').textContent=orderMode?'×':'‹';
+  byId('close').setAttribute('aria-label',orderMode?'Close menu':'Back to orders');
   const container=byId('menuBody');
   container.replaceChildren();
   if(orderMode) {
@@ -252,7 +253,7 @@ function openMenu(mode) {
   cancelGesture();
   menuMode=mode;
   fillMenu();
-  byId('menu').showModal();
+  if(!byId('menu').open) byId('menu').showModal();
 }
 
 function cancelGesture() {
@@ -319,11 +320,10 @@ const flapButtons=C.symbols.map((label,index)=>{
 bindGesture(byId('stamp'),null);
 byId('orders').onclick=()=>openMenu('orders');
 byId('paper').onclick=()=>openMenu('paper');
-byId('close').onclick=()=>byId('menu').close();
-byId('restart').onclick=()=>resetParcel(parcel.job,true);
+byId('close').onclick=()=>menuMode==='paper'?openMenu('orders'):byId('menu').close();
+byId('restart').onclick=()=>{byId('menu').close();resetParcel(parcel.job,true);};
 byId('receipt').onclick=showResult;
 byId('back').onclick=()=>byId('result').close();
-byId('again').onclick=()=>{ byId('result').close();resetParcel(parcel.job,true); };
 byId('next').onclick=()=>{
   byId('result').close();
   if(parcel.job<C.jobs.length-1) resetParcel(parcel.job+1);

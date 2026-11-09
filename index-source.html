@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#212934"><meta name="description" content="Fold, seal and dispatch eight beautifully wrapped parcels.">
+<title>PARCEL PRESS — The Wrapping Desk</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="game">
+  <header class="bar">
+    <div class="mark" aria-hidden="true">✦</div>
+    <div class="brand"><b>PARCEL PRESS</b><span>THE WRAPPING DESK</span></div>
+    <button id="sound" class="icon" aria-label="Mute sound" aria-pressed="false">♪</button>
+    <button id="orders" class="icon" aria-label="Open orders">▤</button>
+  </header>
+  <section class="intro" aria-label="Current order">
+    <div><div class="eyebrow" id="orderId"></div><h1 id="title"></h1><p id="recipient"></p></div>
+    <div class="counter"><b id="count">0 / 4</b><span id="countLabel">FOLDED</span></div>
+  </section>
+  <section class="desk" id="desk" aria-label="Wrapping board">
+    <canvas id="table" aria-hidden="true"></canvas>
+    <span class="deskTag">PRESS No. 04</span>
+    <span class="paperTag" id="paperTag"></span>
+    <div id="flaps" class="flaps"></div>
+    <div id="dropTarget" class="dropTarget" hidden aria-hidden="true"><i></i></div>
+    <div id="heldSeal" class="heldSeal" hidden aria-hidden="true">✦</div>
+    <div class="toast" id="toast" role="status"></div>
+  </section>
+  <section class="dock" aria-label="Wrapping instructions">
+    <div class="ticket">
+      <div><div class="eyebrow" id="step">01 / FOLD</div><h2 id="instruction">Fold the paper in.</h2></div>
+      <span id="ticketMark" class="ticketMark" aria-hidden="true">↗</span>
+      <p id="clue"></p><div id="ruleIcons" class="rules" aria-label="Stacking order"></div>
+    </div>
+    <div class="actions">
+      <button id="paper" class="quiet">Paper</button><button id="restart" class="quiet">Restart</button>
+      <button id="stamp" class="primary" hidden>✦ &nbsp; Seal parcel</button>
+      <button id="receipt" class="primary" hidden>View receipt</button>
+    </div>
+  </section>
+</main>
+<dialog id="menu"><div class="dialogHead"><div><div class="eyebrow" id="menuEyebrow"></div><h2 id="menuTitle"></h2></div><button id="close" class="icon" aria-label="Close menu">×</button></div><div id="menuBody"></div></dialog>
+<dialog id="result"><div class="receipt"><div class="eyebrow">DISPATCH RECEIPT</div><h2 id="resultTitle"></h2><p class="stars" id="stars"></p><p id="details"></p><div class="resultActions"><button id="next" class="primary">Next order →</button><button id="again" class="quiet">Wrap again</button><button id="back" class="quiet">Desk</button></div></div></dialog>
+<script type="module" src="app.mjs"></script>
+</body></html>

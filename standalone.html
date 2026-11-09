@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#212934"><meta name="description" content="Fold, seal and dispatch eight beautifully wrapped parcels.">
+<title>PARCEL PRESS — The Wrapping Desk</title>
+<link rel="icon" href="icon.svg">
+<style>:root {
+  color-scheme: light;
+  --night:#212934; --ink:#202b35; --muted:#5b676a; --paper:#f6eddb; --line:#d6cbb7; --red:#933747;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+* { box-sizing:border-box; }
+[hidden] { display:none!important; }
+body { margin:0; background:#151d26; color:var(--ink); overscroll-behavior:none; }
+button { font:inherit; font-weight:720; color:inherit; cursor:pointer; min-height:44px; min-width:44px; border:0; touch-action:manipulation; }
+button:focus-visible { outline:3px solid #00898c; outline-offset:3px; }
+button:disabled { cursor:default; opacity:.52; }
+.game { width:min(100%,630px); height:100vh; height:100dvh; min-height:490px; margin:auto; display:grid; grid-template-rows:auto auto minmax(170px,1fr) auto; background:var(--paper); }
+.bar { background:var(--night); color:#fff6e4; display:flex; align-items:center; gap:10px; padding:calc(4px + env(safe-area-inset-top)) 14px 4px; }
+.mark { display:grid; place-items:center; width:35px; height:35px; color:#f0c681; border:1px solid #a9885b; border-radius:10px; font-size:22px; }
+.brand { flex:1; display:grid; gap:1px; }
+.brand b { font-size:14px; letter-spacing:.14em; }
+.brand span { font-size:8px; letter-spacing:.21em; color:#e5c99e; font-weight:650; }
+.icon { background:transparent; color:inherit; border-radius:10px; font-size:22px; }
+.bar .icon { background:#323c47; }
+.intro { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; }
+.eyebrow { font-size:9px; letter-spacing:.16em; color:#86404a; font-weight:820; }
+h1,h2,p { margin:0; }
+h1,h2 { font-family:Georgia,serif; font-weight:500; }
+h1 { font-size:clamp(23px,6.4vw,35px); letter-spacing:-.035em; line-height:1.04; margin:3px 0; }
+#recipient { font-size:11px; color:var(--muted); }
+.counter { min-width:64px; padding:5px 8px; border:1px solid var(--line); text-align:center; border-radius:9px; }
+.counter b { font-size:19px; line-height:1; display:block; font-variant-numeric:tabular-nums; }
+.counter span { display:block; font-size:8px; font-weight:760; letter-spacing:.10em; margin-top:3px; }
+.desk { position:relative; isolation:isolate; overflow:hidden; border-radius:13px; margin:0 10px; background:#34434b; }
+canvas { width:100%;height:100%;display:block; }
+.deskTag,.paperTag { position:absolute; left:11px; color:#ffe4ba; font-size:8px; font-weight:750; letter-spacing:.18em; pointer-events:none; }
+.deskTag { top:11px; }
+.paperTag { bottom:9px; }
+.flaps { position:absolute; inset:0; pointer-events:none; }
+.flap { position:absolute; transform:translate(-50%,-50%); display:grid; place-items:center; pointer-events:auto; background:#fff7e5; color:#603135; width:48px; height:48px; border:1px solid #fcdbac; border-radius:50%; box-shadow:0 3px 0 #a5745f,0 5px 9px #1c27366e; font:600 26px Georgia,serif; touch-action:none; }
+.flap[data-ready=false] { background:#f8e0cc; border-color:#c09087; color:#7a5553; }
+.flap[data-ready=true] { box-shadow:0 3px 0 #a5745f,0 0 0 4px #fff7dd40,0 5px 9px #1c27366e; }
+.dropTarget { position:absolute; pointer-events:none; width:42px; height:42px; transform:translate(-50%,-50%); border:2px dashed #fff3d1; border-radius:50%; background:#fff4cf1f; }
+.dropTarget i { display:block; margin:13px auto; width:12px;height:12px;border:1px solid #fff5d4; border-radius:50%; }
+.heldSeal { position:fixed; z-index:5; pointer-events:none; width:42px; height:42px; border-radius:50%; background:#a3384a; border:3px double #ffd9a5; box-shadow:0 5px 12px #25181880; color:#ffdbad; display:grid; place-items:center; font-size:24px; transform:translate(-50%,-50%); }
+.toast { position:absolute; max-width:95%; left:50%; bottom:24px; transform:translateX(-50%); border-radius:9px; color:#fff8e6; background:#24313a; padding:7px 11px; font-size:12px; text-align:center; font-weight:690; pointer-events:none; }
+.toast:empty { display:none; }
+.dock { display:grid; gap:7px; padding:9px 10px calc(9px + env(safe-area-inset-bottom)); }
+.ticket { display:grid; grid-template-columns:1fr auto; align-items:center; gap:3px 7px; border:1px solid var(--line); border-radius:12px; padding:8px 11px; background:#fff8ea; }
+.ticket h2 { font-size:21px; line-height:1.04; margin-top:2px; }
+.ticketMark { font-size:26px; color:var(--red); grid-column:2;grid-row:1; }
+.ticket p { grid-column:1/-1; color:#3e4b4f; font-size:12px; line-height:1.3; }
+.rules { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:4px; }
+.rule { background:#efe4cf; border-radius:5px; padding:2px 5px; color:#623b35; font-size:11px; font-weight:780; }
+.actions,.resultActions { display:flex; flex-wrap:wrap; gap:7px; }
+.quiet,.primary { border-radius:9px; padding:0 12px; }
+.quiet { background:#eadfc9; border:1px solid #d6cbb7; }
+.primary { background:var(--red); color:#fff6e5; flex:1; }
+#stamp { touch-action:none; }
+dialog { color:var(--ink); background:var(--paper); border:1px solid #d6cbb7; border-radius:16px; padding:15px; width:min(calc(100% - 22px),450px); max-height:calc(100% - 22px); box-shadow:0 20px 85px #0e182580; overflow:auto; }
+dialog::backdrop { background:#121c29b0; }
+.dialogHead { display:flex; justify-content:space-between; align-items:center; padding-bottom:9px; }
+.dialogHead h2,.receipt h2 { font-size:26px; }
+.order,.swatch { display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left; background:#fff8ea; border:1px solid var(--line); border-radius:9px; padding:7px 9px; margin:4px 0; gap:8px; }
+.swatch i { width:24px; height:24px; border-radius:5px; background:var(--color); border:1px solid #68504b55; flex:none; }
+.swatch b { flex:1; }
+.swatch small,.order small { font-size:10px; color:var(--muted); font-weight:650; }
+.hint { color:var(--muted); font-size:12px; margin:8px 0; }
+.receipt { text-align:center; }
+.receipt h2 { margin:4px 0; }
+.stars { color:#974048; font-size:30px; letter-spacing:.17em; }
+#details { font-size:13px; margin:5px 0 13px; }
+@media (orientation:landscape) and (max-height:650px) {
+  .game { width:min(100%,960px); height:100vh; height:100dvh; min-height:280px; grid-template-columns:minmax(240px,1fr) minmax(205px,30%); grid-template-rows:auto auto 1fr; padding-bottom:env(safe-area-inset-bottom); }
+  .bar { grid-column:1/-1; }
+  .intro { grid-column:2; grid-row:2; padding:9px; }
+  h1 { font-size:24px; }
+  .desk { grid-column:1; grid-row:2/4; margin:6px 0 7px 8px; }
+  .dock { grid-column:2; grid-row:3; align-content:start; padding:4px 8px; }
+  .ticket h2 { font-size:18px; }
+}
+@media (max-width:355px) { .intro { padding:8px 12px; }.ticket h2{font-size:18px}.flap{width:44px;height:44px}.actions button{padding:0 8px;font-size:13px} }
+.desk { min-width:0; min-height:0; }
+.desk canvas { position:absolute; inset:0; }
+@media (orientation:landscape) and (max-height:380px) {
+  .bar { padding-block:env(safe-area-inset-top) 0; }
+  .intro { padding:5px 8px; }
+  .dock { gap:4px; padding:2px 7px; }
+  .ticket { gap:2px; padding:5px 7px; }
+  .ticket p { font-size:11px; }
+  .rules { gap:2px; }
+  .rule { font-size:10px; }
+  .actions { gap:4px; }
+  .actions button { padding:0 7px; font-size:12px; }
+}
+@media (orientation:landscape) and (max-height:380px) {
+  .intro h1 { font-size:19px; line-height:1.02; }
+  .counter { min-width:53px; padding:4px; }
+  .counter b { font-size:16px; }
+  .ticket { display:block; }
+  .ticket h2,.ticketMark { display:none; }
+  .ticket p { margin:3px 0; }
+}
+</style>
+</head>
+<body>
+<main class="game">
+  <header class="bar">
+    <div class="mark" aria-hidden="true">✦</div>
+    <div class="brand"><b>PARCEL PRESS</b><span>THE WRAPPING DESK</span></div>
+    <button id="sound" class="icon" aria-label="Mute sound" aria-pressed="false">♪</button>
+    <button id="orders" class="icon" aria-label="Open orders">▤</button>
+  </header>
+  <section class="intro" aria-label="Current order">
+    <div><div class="eyebrow" id="orderId"></div><h1 id="title"></h1><p id="recipient"></p></div>
+    <div class="counter"><b id="count">0 / 4</b><span id="countLabel">FOLDED</span></div>
+  </section>
+  <section class="desk" id="desk" aria-label="Wrapping board">
+    <canvas id="table" aria-hidden="true"></canvas>
+    <span class="deskTag">PRESS No. 04</span>
+    <span class="paperTag" id="paperTag"></span>
+    <div id="flaps" class="flaps"></div>
+    <div id="dropTarget" class="dropTarget" hidden aria-hidden="true"><i></i></div>
+    <div id="heldSeal" class="heldSeal" hidden aria-hidden="true">✦</div>
+    <div class="toast" id="toast" role="status"></div>
+  </section>
+  <section class="dock" aria-label="Wrapping instructions">
+    <div class="ticket">
+      <div><div class="eyebrow" id="step">01 / FOLD</div><h2 id="instruction">Fold the paper in.</h2></div>
+      <span id="ticketMark" class="ticketMark" aria-hidden="true">↗</span>
+      <p id="clue"></p><div id="ruleIcons" class="rules" aria-label="Stacking order"></div>
+    </div>
+    <div class="actions">
+      <button id="paper" class="quiet">Paper</button><button id="restart" class="quiet">Restart</button>
+      <button id="stamp" class="primary" hidden>✦ &nbsp; Seal parcel</button>
+      <button id="receipt" class="primary" hidden>View receipt</button>
+    </div>
+  </section>
+</main>
+<dialog id="menu"><div class="dialogHead"><div><div class="eyebrow" id="menuEyebrow"></div><h2 id="menuTitle"></h2></div><button id="close" class="icon" aria-label="Close menu">×</button></div><div id="menuBody"></div></dialog>
+<dialog id="result"><div class="receipt"><div class="eyebrow">DISPATCH RECEIPT</div><h2 id="resultTitle"></h2><p class="stars" id="stars"></p><p id="details"></p><div class="resultActions"><button id="next" class="primary">Next order →</button><button id="again" class="quiet">Wrap again</button><button id="back" class="quiet">Desk</button></div></div></dialog>
+<script>(()=>{
+const Core=(()=>{
+
+const symbols = ['Leaf', 'Sun', 'Moon', 'Star'];
+const glyphs = ['❧', '☀', '☾', '✦'];
+const jobs = [
+  {name:'Little Thank You', to:'Milo', kind:'BOOKSHOP ORDER', w:2.65,d:2.05,h:.58, paper:0, over:[[2,0],[3,1]], clue:'Moon over Leaf. Star over Sun.'},
+  {name:'Tea for Two', to:'Nora', kind:'AFTERNOON DELIVERY', w:2.30,d:2.25,h:.78, paper:1, over:[[0,3],[1,2]], clue:'Leaf over Star. Sun over Moon.'},
+  {name:'Midnight Album', to:'Iris', kind:'RECORD STORE ORDER', w:2.64,d:2.54,h:.44, paper:2, over:[[3,2],[2,0]], clue:'Leaf, then Moon, then Star.'},
+  {name:'Garden Notes', to:'Sage', kind:'FLOWER SHOP ORDER', w:2.09,d:2.68,h:.65, paper:3, over:[[1,0],[3,1],[2,3]], clue:'Leaf → Sun → Star → Moon.'},
+  {name:'The Long Weekend', to:'Theo', kind:'BIRTHDAY DELIVERY', w:2.84,d:1.92,h:.65, paper:1, over:[[1,3],[2,1],[2,0]], clue:'Sun over Star. Moon over Sun and Leaf.'},
+  {name:'Studio Opening', to:'June', kind:'GALLERY DELIVERY', w:2.4,d:2.25,h:.9, paper:0, over:[[0,2],[3,0],[1,3]], clue:'Moon → Leaf → Star → Sun.'},
+  {name:'Letters From Afar', to:'Avery', kind:'SPECIAL DELIVERY', w:2.55,d:2.12,h:.74, paper:2, over:[[3,0],[3,2],[1,3]], clue:'Star over Leaf and Moon. Sun over Star.'},
+  {name:'The Last Parcel', to:'Pip', kind:'CLOSING TIME', w:2.83,d:2.45,h:.92, paper:3, over:[[0,1],[2,0],[3,2]], clue:'Sun → Leaf → Moon → Star.'},
+];
+const papers = [
+  {name:'Peach Grove', base:'#e79775', pale:'#f4b194', ink:'#8b372d', seal:'#962e42', motif:'leaf'},
+  {name:'Lemon Press', base:'#e8c45f', pale:'#f6d785', ink:'#7b491e', seal:'#a04329', motif:'sun'},
+  {name:'Night Post', base:'#8c94ce', pale:'#a9b2ec', ink:'#3b406e', seal:'#4a376e', motif:'star'},
+  {name:'Glass Garden', base:'#92b899', pale:'#b2ceb3', ink:'#345b4d', seal:'#376147', motif:'leaf'},
+  {name:'Blue Porcelain', base:'#81bdd4', pale:'#acd6e7', ink:'#265473', seal:'#2e4e78', motif:'star', earned:8, reward:'like'},
+  {name:'Berry Foil', base:'#d290ae', pale:'#edb1c9', ink:'#833c5e', seal:'#7e2c57', motif:'sun', earned:16, reward:'comment'},
+];
+
+function profile(value) {
+  const data = value && typeof value === 'object' ? value : {};
+  return {
+    best: jobs.map((_, i) => Number.isInteger(data.best?.[i]) ? Math.max(0, Math.min(3, data.best[i])) : 0),
+    rewards: {like:data.rewards?.like === true, comment:data.rewards?.comment === true},
+    mute: data.mute === true
+  };
+}
+
+function total(p) { return p.best.reduce((a, b) => a + b, 0); }
+function unlocked(p, index) { return index === 0 || p.best[index - 1] > 0; }
+
+function canUsePaper(p, index) {
+  const paper = papers[index];
+  return !!paper && (!paper.reward || p.rewards[paper.reward] || total(p) >= paper.earned);
+}
+
+function mergeProfile(local, incoming) {
+  const other = profile(incoming);
+  return {
+    best: local.best.map((n, i) => Math.max(n, other.best[i])),
+    rewards: {like:local.rewards.like || other.rewards.like, comment:local.rewards.comment || other.rewards.comment},
+    mute: local.mute
+  };
+}
+
+function newParcel(job, paper = jobs[job].paper) {
+  return {job, paper, folds:[], slips:0, seal:null, stars:0};
+}
+
+function missingUnder(state, flap) {
+  return jobs[state.job].over.filter(([above, below]) => above === flap && !state.folds.includes(below)).map(pair => pair[1]);
+}
+
+function fold(state, flap) {
+  if (state.seal || !Number.isInteger(flap) || flap < 0 || flap > 3 || state.folds.includes(flap)) return {kind:'ignored'};
+  const missing = missingUnder(state, flap);
+  if (missing.length) {
+    state.slips += 1;
+    return {kind:'blocked', missing};
+  }
+  state.folds.push(flap);
+  return {kind:'folded'};
+}
+
+function seal(state, dx, dy) {
+  if (state.seal || state.folds.length !== 4 || !Number.isFinite(dx) || !Number.isFinite(dy)) return false;
+  const distance = Math.hypot(dx,dy);
+  const job = jobs[state.job];
+  const x = .858*dx + .514*dy/.65;
+  const z = -.514*dx + .858*dy/.65;
+  if (Math.abs(x) > job.w/2-.36 || Math.abs(z) > job.d/2-.36) return false;
+  state.seal = [dx,dy];
+  state.stars = 1 + Number(state.slips === 0) + Number(distance <= .30);
+  return true;
+}
+
+function restore(data, p) {
+  const index = Number.isInteger(data?.job) && jobs[data.job] && unlocked(p,data.job) ? data.job : 0;
+  const state = newParcel(index);
+  if (data?.job !== index) return state;
+  if (canUsePaper(p,data.paper)) state.paper = data.paper;
+  if (Array.isArray(data.folds)) {
+    for (const flap of data.folds.slice(0,4)) {
+      if (fold(state,flap).kind !== 'folded') break;
+    }
+  }
+  state.slips = Number.isInteger(data.slips) ? Math.max(0, Math.min(9999,data.slips)) : 0;
+  if (Array.isArray(data.seal)) seal(state,...data.seal);
+  return state;
+}
+
+return {symbols,glyphs,jobs,papers,profile,total,unlocked,canUsePaper,mergeProfile,newParcel,missingUnder,fold,seal,restore};
+})();
+const Graphics=(()=>{
+const {jobs,papers}=Core;
+
+const axes = [[-1,0],[0,-1],[1,0],[0,1]];
+const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
+const ease = t => t*t*(3-2*t);
+const project = ([x,y,z]) => [.858*x-.514*z, .65*(.514*x+.858*z)-.76*y, .76*(.514*x+.858*z)+.65*y];
+
+function hinge(job, index, progress, layer) {
+  const [dx,dz] = axes[index];
+  const half = dx ? job.w/2 : job.d/2;
+  const width = dx ? job.d : job.w;
+  const height = job.h + .018 + layer*.018;
+  const reach = half + .085;
+  const rise = ease(clamp(progress / .64, 0, 1))*Math.PI/2;
+  const turn = rise + ease(clamp((progress-.31) / .69,0,1))*Math.PI/2;
+  const line = (travel, y) => [
+    [dx*(half+travel) - dz*width/2, y, dz*(half+travel) + dx*width/2],
+    [dx*(half+travel) + dz*width/2, y, dz*(half+travel) - dx*width/2]
+  ];
+  const root = line(0, .004);
+  const bend = line(height*Math.cos(rise), height*Math.sin(rise)+.004);
+  const tip = line(height*Math.cos(rise)+reach*Math.cos(turn), height*Math.sin(rise)+reach*Math.sin(turn)+.004);
+  return [[root[0],root[1],bend[1],bend[0]],[bend[0],bend[1],tip[1],tip[0]]];
+}
+
+function quad(x0,x1,y,z0,z1) { return [[x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1]]; }
+
+function rounded(ctx,x,y,w,h,r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function decoration(ctx,type,x,y,s) {
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(s,s);
+  ctx.lineWidth /= s;
+  ctx.beginPath();
+  if (type === 'leaf') {
+    ctx.moveTo(-.8,.65);
+    ctx.quadraticCurveTo(-.9,-.95,.8,-.65);
+    ctx.quadraticCurveTo(.9,.82,-.8,.65);
+    ctx.moveTo(-.79,.64);
+    ctx.lineTo(.49,-.43);
+  } else if (type === 'sun') {
+    ctx.arc(0,0,.48,0,Math.PI*2);
+    for (let k=0;k<8;k++) {
+      const a=k*Math.PI/4;
+      ctx.moveTo(.65*Math.cos(a),.65*Math.sin(a));
+      ctx.lineTo(.92*Math.cos(a),.92*Math.sin(a));
+    }
+  } else {
+    ctx.moveTo(0,-1);
+    ctx.quadraticCurveTo(.13,-.16,.9,0);
+    ctx.quadraticCurveTo(.13,.16,0,1);
+    ctx.quadraticCurveTo(-.13,.16,-.9,0);
+    ctx.quadraticCurveTo(-.13,-.16,0,-1);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+class View {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.w = this.h = 0;
+    this.scale = 1;
+    this.fx = [];
+    this.bg = document.createElement('canvas');
+    this.density = 1;
+  }
+
+  resize(job) {
+    const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+    const dpr = Math.min(devicePixelRatio || 1, 1.65);
+    if (w !== this.w || h !== this.h || dpr !== this.density) {
+      this.w=w; this.h=h; this.density=dpr;
+      this.canvas.width=Math.max(1,Math.round(w*dpr));
+      this.canvas.height=Math.max(1,Math.round(h*dpr));
+      this.ctx.setTransform(dpr,0,0,dpr,0,0);
+      this.makeDesk();
+    }
+    const flat = axes.flatMap((_, i) => hinge(job,i,0,0).flat()).map(project);
+    const extents = flat.reduce((acc, [x,y]) => [Math.min(acc[0],x),Math.max(acc[1],x),Math.min(acc[2],y),Math.max(acc[3],y)], [0,0,0,0]);
+    const [left,right,top,bottom] = extents;
+    this.scale = Math.max(1, Math.min((w-36)/(right-left), (h-45)/(bottom-top), 85));
+    this.cx = w/2-(left+right)*this.scale/2;
+    this.cy = h*.5-(top+bottom)*this.scale/2+3;
+  }
+
+  screen(point) {
+    const [x,y] = project(point);
+    return [this.cx+x*this.scale, this.cy+y*this.scale];
+  }
+
+  marker(job,index) {
+    const flap = hinge(job,index,0,0)[1];
+    const center = flap[0].map((_,a)=>flap.reduce((sum,p)=>sum+p[a],0)/4);
+    const [x,y] = this.screen(center);
+    return [clamp(x,25,this.w-25),clamp(y,28,this.h-30)];
+  }
+
+  target(job) { return this.screen([0,job.h+.1,0]); }
+
+  makeDesk() {
+    const {w,h,bg} = this;
+    bg.width=Math.max(1,w); bg.height=Math.max(1,h);
+    const ctx=bg.getContext('2d');
+    const grad=ctx.createLinearGradient(0,0,w,h);
+    grad.addColorStop(0,'#687b77'); grad.addColorStop(.47,'#455c61'); grad.addColorStop(1,'#303d48');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
+    for(let i=0;i<1150;i++){
+      const x=(i*197.47)%w, y=(i*87.37)%h;
+      ctx.fillStyle=i%2?'#ffffff13':'#1727341d';
+      ctx.fillRect(x,y,1+(i%4)*.3,.7);
+    }
+    ctx.lineWidth=1; ctx.strokeStyle='#d0d9b621';
+    rounded(ctx,5,5,w-10,h-10,10); ctx.stroke();
+    ctx.strokeStyle='#e0e7c21d';
+    for(let x=13;x<w-7;x+=9){
+      ctx.beginPath();ctx.moveTo(x,h-4);ctx.lineTo(x,h-(x%45<10?12:8));ctx.stroke();
+    }
+    if(h>w*.98){
+      ctx.save();
+      ctx.translate(31,43);ctx.rotate(-.10);
+      ctx.fillStyle='#21303973';rounded(ctx,3,5,91,73,4);ctx.fill();
+      ctx.fillStyle='#e6c6a2';rounded(ctx,0,0,91,73,4);ctx.fill();
+      ctx.fillStyle='#fbebcb';rounded(ctx,-3,-3,91,70,4);ctx.fill();
+      ctx.fillStyle='#8e4a44';ctx.font='bold 9px system-ui';ctx.fillText('AIR POST',10,15);
+      ctx.fillStyle='#5f6257';ctx.font='8px system-ui';ctx.fillText('HAND WRAPPED',10,26);
+      ctx.fillStyle='#d9b594';ctx.fillRect(10,34,66,1);ctx.fillRect(10,44,56,1);ctx.fillRect(10,54,63,1);
+      ctx.strokeStyle='#ac6c61';ctx.lineWidth=1;ctx.beginPath();ctx.arc(75,12,8,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+      ctx.save();ctx.translate(34,h-80);ctx.rotate(.27);
+      ctx.fillStyle='#1e303760';rounded(ctx,0,4,77,11,4);ctx.fill();
+      ctx.fillStyle='#d8a562';rounded(ctx,0,0,69,9,4);ctx.fill();
+      ctx.fillStyle='#965c46';ctx.fillRect(4,2,59,1.2);
+      ctx.fillStyle='#f1c89d';ctx.beginPath();ctx.moveTo(68,0);ctx.lineTo(80,4.5);ctx.lineTo(68,9);ctx.fill();
+      ctx.fillStyle='#333943';ctx.beginPath();ctx.moveTo(77,3.4);ctx.lineTo(81,4.5);ctx.lineTo(77,5.8);ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();ctx.translate(w-44,25);ctx.rotate(-.16);
+    ctx.fillStyle='#17263155'; rounded(ctx,-27,-13,65,27,6);ctx.fill();
+    ctx.fillStyle='#cb9a6b';rounded(ctx,-30,-16,65,25,5);ctx.fill();
+    ctx.strokeStyle='#f4cda1';ctx.stroke();
+    ctx.strokeStyle='#825c4a';ctx.lineWidth=1;
+    for(let i=-25;i<32;i+=5){ctx.beginPath();ctx.moveTo(i,-15);ctx.lineTo(i,-(i%2?9:5));ctx.stroke();}
+    ctx.restore();
+    ctx.save();ctx.translate(w-27,h-29);ctx.rotate(.22);
+    ctx.fillStyle='#17263188'; ctx.beginPath();ctx.ellipse(3,5,24,14,0,0,Math.PI*2);ctx.fill();
+    for(let y=4;y>=0;y--){
+      ctx.fillStyle=y?'#b39261':'#e9cb96';ctx.beginPath();ctx.ellipse(0,y,23,13,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='#4a5856';ctx.beginPath();ctx.ellipse(0,0,12,6,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#a0815e';ctx.stroke();
+    ctx.restore();
+  }
+
+  face(points, fill, edge='#613e3460') {
+    const ctx=this.ctx;
+    ctx.beginPath();
+    points.forEach((p,i)=>{ const [x,y]=this.screen(p); if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y); });
+    ctx.closePath();
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle=edge;ctx.lineWidth=.9;ctx.stroke();
+  }
+
+  inkOnFace(points,width,height,draw) {
+    const ctx=this.ctx, [a,b,,d]=points.map(p=>this.screen(p));
+    ctx.save();
+    ctx.transform((b[0]-a[0])/width,(b[1]-a[1])/width,(d[0]-a[0])/height,(d[1]-a[1])/height,a[0],a[1]);
+    ctx.beginPath();ctx.rect(0,0,width,height);ctx.clip();
+    draw(ctx);
+    ctx.restore();
+  }
+
+  printed(points,paper,fill, width, height, faint=false) {
+    this.face(points,fill);
+    this.inkOnFace(points,width,height,ctx=>{
+      ctx.strokeStyle=paper.ink;ctx.lineWidth=.014;ctx.globalAlpha=faint?.34:.56;
+      for(let x=.17;x<width+.2;x+=.36){
+        for(let y=.14+(Math.round(x/.36)%2)*.13;y<height+.12;y+=.33) {
+          decoration(ctx,paper.motif,x,y,.082);
+          ctx.fillStyle=paper.ink;ctx.fillRect(x+.15,y+.06,.013,.014);
+        }
+      }
+      ctx.globalAlpha=.6;ctx.lineWidth=.017;
+      ctx.strokeRect(.035,.035,width-.07,height-.07);
+    });
+  }
+
+  draw(state,values,now) {
+    const {ctx,w,h,scale} = this;
+    if(!w||!h) return;
+    const job=jobs[state.job], paper=papers[state.paper];
+    ctx.drawImage(this.bg,0,0,w,h);
+    const [shadowX,shadowY]=this.screen([.13,0,.19]);
+    ctx.fillStyle='#15252c64';
+    ctx.beginPath();ctx.ellipse(shadowX,shadowY,scale*1.84,scale*1.05,.03,0,Math.PI*2);ctx.fill();
+    this.printed(quad(-job.w/2,job.w/2,0,-job.d/2,job.d/2),paper,paper.base,job.w,job.d);
+    const panels=axes.map((_,index)=>{
+      const order=state.folds.indexOf(index);
+      return { index, order, progress:values[index], pieces:hinge(job,index,values[index],order<0?state.folds.length:order) };
+    });
+    const drawPanel = ({index,progress,pieces}) => {
+      const width = index%2 ? job.w : job.d;
+      const reach = (index%2 ? job.d : job.w)/2+.085;
+      this.printed(pieces[0],paper,index===3?paper.pale:paper.base,width,job.h+.06,true);
+      this.printed(pieces[1],paper,progress>.68?paper.pale:paper.base,width,reach);
+    };
+    panels.filter(p=>p.progress<.12 || (p.index===0||p.index===1)&&p.progress<.68).forEach(drawPanel);
+
+    const x=job.w/2,z=job.d/2,y=job.h;
+    const lid = quad(-x,x,y,-z,z);
+    this.face([[x,0,-z],[x,0,z],[x,y,z],[x,y,-z]],'#b78055');
+    this.face([[-x,0,z],[x,0,z],[x,y,z],[-x,y,z]],'#d5a475');
+    this.face(lid,'#edc591');
+    this.inkOnFace(lid,job.w,job.d,c=>{
+      c.fillStyle='#b1815642';
+      for(let i=0;i<99;i++) c.fillRect(.04+(i*.239)%(job.w-.08),.05+(i*.173)%(job.d-.1),.05,.006);
+      c.strokeStyle='#8c644951'; c.lineWidth=.025;c.strokeRect(.1,.1,job.w-.2,job.d-.2);
+      c.fillStyle='#f8e3b9';c.fillRect(job.w*.22,job.d*.22,job.w*.56,job.d*.56);
+      c.strokeStyle='#a26954';c.setLineDash([.035,.025]);c.strokeRect(job.w*.25,job.d*.25,job.w*.5,job.d*.5);c.setLineDash([]);
+      c.fillStyle='#865447';c.font='bold .11px system-ui';c.textAlign='center';c.fillText('PREPARED FOR',job.w*.5,job.d*.44);
+      c.fillStyle='#543e36';c.font='.31px Georgia';c.fillText(job.to,job.w*.5,job.d*.64);
+    });
+    panels.filter(p=>p.progress>=.12 && !((p.index===0||p.index===1)&&p.progress<.68))
+      .sort((a,b)=>(a.order<0?99:a.order)-(b.order<0?99:b.order)).forEach(drawPanel);
+    if(state.seal) this.stamp(job,paper,state.seal);
+    this.fx = this.fx.filter(p=>now-p.start<620);
+    for(const p of this.fx) {
+      const t=(now-p.start)/620;
+      ctx.globalAlpha=(1-t)*(1-t);ctx.fillStyle=p.fill;
+      ctx.save();ctx.translate(p.x+p.dx*t,p.y+p.dy*t+24*t*t);ctx.rotate(p.rot*t);ctx.fillRect(-2,-2,4,4);ctx.restore();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  stamp(job,paper,offset) {
+    const ctx=this.ctx;
+    const [x,y]=this.target(job);
+    ctx.save();
+    ctx.translate(x+offset[0]*this.scale,y+offset[1]*this.scale);
+    ctx.scale(1,.65);
+    const r=this.scale*.40;
+    ctx.fillStyle='#6d423c77';ctx.beginPath();ctx.arc(1.5,3,r,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=paper.seal;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#ffddaa';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r*.82,0,Math.PI*2);ctx.stroke();
+    ctx.lineWidth=2;decoration(ctx,'star',0,0,r*.59);
+    ctx.restore();
+  }
+
+  burst(x,y,fill,now) {
+    this.fx = Array.from({length:16},(_,i)=>{
+      const a=i*2.399, r=28+(i%7)*9;
+      return {x,y,dx:Math.cos(a)*r,dy:Math.sin(a)*r,fill:i%3?fill:'#fff2bc',rot:i*.52,start:now};
+    });
+  }
+}
+
+return {View};
+})();
+const Host=(()=>{
+
+// Optional host integration. Gameplay never awaits SDK discovery or registration.
+function bridge({host=()=>globalThis.neonlib,read,write,changed=()=>{},schedule=setTimeout,cancel=clearTimeout,timeout=5000}){
+ const game='parcel-press';let alive=true,epoch=0,sdk=null,started=false,ended=false,startHost=null,loadStarted=false,cloudReady=false,cloudBase={},dirty=false,saving=false,timers=new Set(),entries=new Map(),support={like:false,comment:false};
+ const later=(fn,ms)=>{let id=schedule(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;};
+ const safeStop=fn=>{try{fn?.();}catch{}};
+ const getHost=()=>{try{let h=host();return h&&typeof h==='object'?h:null;}catch{return null;}};
+ const emit=e=>{if(alive)try{changed(e);}catch{}};
+ function call(h,name){try{if(typeof h?.[name]!=='function')return false;Promise.resolve(h[name]()).catch(()=>{});return true;}catch{return false;}}
+ function notifyStart(){if(started&&!ended&&sdk&&startHost!==sdk&&call(sdk,'gameStart'))startHost=sdk;}
+ function save(){dirty=true;flush();}
+ function flush(){
+  if(!alive||saving||!dirty||!cloudReady||typeof sdk?.saveUserGameState!=='function')return;
+  let snapshot;
+  try{snapshot={...cloudBase,game,v:1,profile:JSON.parse(JSON.stringify(read()))};}catch{return;}
+  dirty=false;
+  saving=true;
+  const destination=sdk,gen=epoch;
+  let settled=false, timedOut=false;
+  const timer=later(()=>{
+   if(!alive||gen!==epoch||settled)return;
+   timedOut=true;
+   cloudReady=false;
+   dirty=true;
+   emit({type:'cloudUnavailable'});
+  },timeout);
+  function finish(success){
+   if(settled)return;
+   settled=true;
+   cancel(timer);
+   timers.delete(timer);
+   if(!alive||gen!==epoch)return;
+   saving=false;
+   if(timedOut)cloudReady=true;
+   if(!success){dirty=true;return;}
+   emit({type:'saved'});
+   if(dirty)flush();
+  }
+  try{Promise.resolve(destination.saveUserGameState(snapshot)).then(result=>finish(result?.code===0),()=>finish(false));}
+  catch{finish(false);}
+ }
+ function reward(kind,e){if(!alive||!e||typeof e!=='object'||typeof e.project_id!=='string'||!e.project_id.trim()||kind==='like'&&e.status!==true||kind==='comment'&&typeof e.content!=='string')return;let p=read();if(p.rewards?.[kind])return;p.rewards={...p.rewards,[kind]:true};write(p,false);emit({type:'reward',kind});save();}
+ function reg(kind,name,attempt=0){if(!alive||entries.has(kind)||typeof sdk?.[name]!=='function')return;let gen=epoch,entry={live:false,expired:false,stop:null};entries.set(kind,entry);
+  let timer=later(()=>{if(!alive||gen!==epoch)return;entry.expired=true;if(attempt<1&&entries.get(kind)===entry)entries.delete(kind);support[kind]=false;emit({type:'support',...support});if(attempt<1)later(()=>reg(kind,name,attempt+1),1000);},timeout);
+  const callback=e=>{if(alive&&gen===epoch&&entry.live&&!entry.expired)reward(kind,e);};
+  const done=r=>{cancel(timer);timers.delete(timer);let stop=r?.code===0&&typeof r?.data?.unsubscribe==='function'?r.data.unsubscribe:null;if(!alive||gen!==epoch||entry.expired){safeStop(stop);return;}if(r?.code!==0){entry.expired=true;if(r?.code===-2&&attempt<1){entries.delete(kind);later(()=>reg(kind,name,attempt+1),1000);}return;}entry.live=true;entry.stop=stop;support[kind]=true;emit({type:'support',...support});};
+  try{Promise.resolve(sdk[name](callback)).then(done,()=>done(null));}catch{done(null);}
+ }
+ function recognized(raw){return !!raw&&typeof raw==='object'&&!Array.isArray(raw)&&raw.game===game&&raw.v===1&&raw.profile&&typeof raw.profile==='object'&&!Array.isArray(raw.profile);}
+ function connect(){if(!alive)return;let h=getHost();if(!h)return;if(sdk!==h){epoch++;for(let e of entries.values()){e.expired=true;safeStop(e.stop);}entries.clear();support={like:false,comment:false};cloudReady=false;loadStarted=false;cloudBase={};saving=false;sdk=h;emit({type:'connected'});}
+  if(!loadStarted&&typeof sdk.loadUserGameState==='function'){loadStarted=true;let gen=epoch,resolved=false;later(()=>{if(alive&&gen===epoch&&!resolved){resolved=true;cloudReady=false;emit({type:'cloudUnavailable'});}},timeout);
+   try{Promise.resolve(sdk.loadUserGameState()).then(raw=>{if(!alive||gen!==epoch||resolved)return;resolved=true;if(recognized(raw)){cloudBase=raw;write(raw.profile,true);emit({type:'cloud'});}cloudReady=recognized(raw)||!!raw&&typeof raw==='object'&&!Array.isArray(raw)&&Object.keys(raw).length===0;if(dirty)flush();},()=>{if(gen===epoch){resolved=true;cloudReady=false;}});}catch{resolved=true;cloudReady=false;}}
+  notifyStart();reg('like','onLike');reg('comment','onComment');if(dirty)flush();
+ }
+ function probe(n=0){connect();if(alive&&n<8)later(()=>probe(n+1),1500);}
+ function nudge(){connect();}const external=typeof globalThis.addEventListener==='function';if(external)for(let name of ['pointerdown','focus','resize'])globalThis.addEventListener(name,nudge,{passive:true});probe();
+ return{save,connect,support:()=>({...support}),prepare(){started=false;ended=false;startHost=null;},start(){if(started&&!ended)return;started=true;ended=false;connect();notifyStart();},end(){if(!started||ended)return;ended=true;call(sdk||startHost,'gameOver');},
+  viewport(){let h=getHost();try{let v=h?.getGameViewport?.();if(v&&typeof v.then==='function'){Promise.resolve(v).catch(()=>{});return null;}if(v&&Number.isFinite(v.width)&&Number.isFinite(v.height)&&v.width>0&&v.height>0)return{width:v.width,height:v.height,density:Number.isFinite(v.density)&&v.density>0?v.density:1};}catch{}return null;},
+  stop(){if(!alive)return;alive=false;epoch++;if(external)for(let name of ['pointerdown','focus','resize'])globalThis.removeEventListener(name,nudge);for(let t of timers)cancel(t);timers.clear();for(let e of entries.values()){e.expired=true;safeStop(e.stop);}entries.clear();support={like:false,comment:false};}
+ };
+}
+
+
+
+
+
+
+
+
+return {bridge};
+})();
+const C=Core,{View}=Graphics,{bridge}=Host;
+
+const byId = id => document.getElementById(id);
+const key = 'parcel-press-v1';
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch {}
+let profile = C.profile(saved.profile);
+let parcel = C.restore(saved.parcel, profile);
+let host;
+let audio;
+let gesture;
+let menuMode;
+let toastTimer;
+let resultTimer;
+const table = new View(byId('table'));
+let values = C.symbols.map((_,i) => Number(parcel.folds.includes(i)));
+let animations = [];
+let frame = 0;
+
+function persist() {
+  try { localStorage.setItem(key, JSON.stringify({profile,parcel})); } catch {}
+}
+
+function makeHost() {
+  return bridge({
+    read: () => C.profile(profile),
+    write(incoming, merge) {
+      profile = merge ? C.mergeProfile(profile,incoming) : C.profile(incoming);
+      persist();
+      if (byId('menu').open) fillMenu();
+    },
+    changed(event) {
+      if (byId('menu').open) fillMenu();
+      if (event.type === 'reward') announce(event.kind === 'like' ? 'Blue Porcelain paper unlocked' : 'Berry Foil paper unlocked');
+    }
+  });
+}
+
+function notes(kind) {
+  if(profile.mute) return;
+  try {
+    audio ??= new (window.AudioContext || window.webkitAudioContext)();
+    if(audio.state==='suspended') audio.resume().catch(()=>{});
+    const tones = {paper:[225,320], bump:[126], stamp:[180,440,660,880], select:[440]};
+    const at=audio.currentTime;
+    tones[kind].forEach((pitch,i)=>{
+      const osc=audio.createOscillator(), amp=audio.createGain(), time=at+i*.048;
+      osc.type=kind==='paper'?'triangle':'sine';
+      osc.frequency.setValueAtTime(pitch,time);
+      amp.gain.setValueAtTime(.0001,time);
+      amp.gain.exponentialRampToValueAtTime(kind==='stamp'?.16:.095,time+.014);
+      amp.gain.exponentialRampToValueAtTime(.0001,time+.18);
+      osc.connect(amp);amp.connect(audio.destination);
+      osc.start(time);osc.stop(time+.19);
+    });
+  } catch {}
+}
+
+function announce(message) {
+  clearTimeout(toastTimer);
+  byId('toast').textContent=message;
+  toastTimer=setTimeout(()=>byId('toast').textContent='',1550);
+}
+
+function requestDraw() {
+  if (!frame) frame=requestAnimationFrame(render);
+}
+
+function render(now) {
+  frame=0;
+  animations=animations.filter(animation=>{
+    const elapsed=Math.min(1,(now-animation.start)/animation.duration);
+    const t=1-(1-elapsed)**3;
+    values[animation.flap]=animation.from+(animation.to-animation.from)*t;
+    return elapsed<1;
+  });
+  table.draw(parcel,values,now);
+  if(animations.length || table.fx.length) requestDraw();
+}
+
+function animate(flap,to,duration) {
+  animations=animations.filter(a=>a.flap!==flap);
+  animations.push({flap,from:values[flap],to,start:performance.now(),duration});
+  requestDraw();
+}
+
+function positionControls() {
+  const job=C.jobs[parcel.job];
+  table.resize(job);
+  flapButtons.forEach((button,i)=>{
+    const [x,y]=table.marker(job,i);
+    button.style.left=x+'px'; button.style.top=y+'px';
+  });
+  const [x,y]=table.target(job);
+  byId('dropTarget').style.left=x+'px';
+  byId('dropTarget').style.top=y+'px';
+  requestDraw();
+}
+
+function update() {
+  const job=C.jobs[parcel.job], count=parcel.folds.length, done=!!parcel.seal;
+  byId('orderId').textContent=String(parcel.job+1).padStart(2,'0')+' / 08   ·   '+job.kind;
+  byId('title').textContent=job.name;
+  byId('recipient').textContent='Prepared for '+job.to;
+  byId('count').textContent=done ? '✓' : count+' / 4';
+  byId('countLabel').textContent=done?'SEALED':'FOLDED';
+  byId('paperTag').textContent=C.papers[parcel.paper].name.toUpperCase();
+  byId('step').textContent=done?'03 / DISPATCH':count===4?'02 / SEAL':'01 / FOLD';
+  byId('instruction').textContent=done?'Ready for delivery.':count===4?'Seal the seam.':'Fold the paper in.';
+  byId('clue').textContent=done?'Your parcel and stars are saved.':count===4?'Drag the seal to the dotted circle, or tap to center it.':'Drag or tap a symbol to fold. Bottom layers go first.';
+  byId('ticketMark').textContent=done?'✓':count===4?'✦':'↗';
+  byId('ruleIcons').replaceChildren();
+  if(count<4) for (const [above, below] of job.over) {
+    const rule=document.createElement('span');
+    rule.className='rule';
+    rule.textContent=C.glyphs[below]+' '+C.symbols[below]+' → '+C.glyphs[above]+' '+C.symbols[above];
+    byId('ruleIcons').append(rule);
+  }
+  flapButtons.forEach((button,i)=>{
+    button.hidden=parcel.folds.includes(i)||done;
+    button.dataset.ready=String(C.missingUnder(parcel,i).length===0);
+  });
+  byId('dropTarget').hidden=count!==4||done;
+  byId('stamp').hidden=count!==4||done;
+  byId('receipt').hidden=!done;
+  byId('sound').setAttribute('aria-pressed',String(profile.mute));
+  byId('sound').setAttribute('aria-label',profile.mute?'Unmute sound':'Mute sound');
+  byId('sound').textContent=profile.mute?'♩':'♪';
+  positionControls();
+}
+
+function commitFold(flap) {
+  const outcome=C.fold(parcel,flap);
+  if(outcome.kind==='ignored') return;
+  host.start();
+  persist();
+  if(outcome.kind==='blocked') {
+    animate(flap,0,230);
+    notes('bump');
+    announce(C.symbols[flap]+' goes over '+outcome.missing.map(i=>C.symbols[i]).join(' and ')+'.');
+    return;
+  }
+  announce(C.symbols[flap]+' tucked');
+  notes('paper');
+  animate(flap,1,420);
+  const [x,y]=table.marker(C.jobs[parcel.job],flap);
+  table.burst(x,y,C.papers[parcel.paper].pale,performance.now());
+  update();
+}
+
+function commitSeal(dx,dy) {
+  if(!C.seal(parcel,dx,dy)) {
+    notes('bump');
+    announce('Bring the seal closer to the center.');
+    return;
+  }
+  host.start();
+  profile.best[parcel.job]=Math.max(profile.best[parcel.job],parcel.stars);
+  persist();
+  host.save();
+  host.end();
+  notes('stamp');
+  const [x,y]=table.target(C.jobs[parcel.job]);
+  table.burst(x,y,C.papers[parcel.paper].pale,performance.now());
+  update();
+  resultTimer=setTimeout(showResult,520);
+}
+
+function showResult() {
+  if (!parcel.seal || byId('result').open || byId('menu').open) return;
+  byId('resultTitle').textContent='For '+C.jobs[parcel.job].to;
+  byId('stars').textContent='★'.repeat(parcel.stars)+'☆'.repeat(3-parcel.stars);
+  const detail=parcel.slips ? parcel.slips+' stacking '+(parcel.slips===1?'slip':'slips') : 'Clean folds';
+  const alignment=Math.hypot(...parcel.seal)<=.30?'centered seal':'seal attached';
+  byId('details').textContent=detail+' · '+alignment;
+  byId('next').textContent=parcel.job===C.jobs.length-1?'All orders →':'Next order →';
+  byId('result').showModal();
+}
+
+function resetParcel(index,preservePaper=false) {
+  cancelGesture();
+  clearTimeout(resultTimer);
+  if (!parcel.seal) host.end();
+  host.prepare();
+  parcel=C.newParcel(index,preservePaper?parcel.paper:undefined);
+  values=C.symbols.map(()=>0);
+  animations=[];
+  table.fx=[];
+  announce('');
+  persist();
+  update();
+}
+
+function fillMenu() {
+  const orderMode=menuMode==='orders';
+  byId('menuEyebrow').textContent=orderMode?'DISPATCH BOOK':'PAPER DRAWER';
+  byId('menuTitle').textContent=orderMode?C.total(profile)+' / 24 stars':'Choose your paper';
+  const container=byId('menuBody');
+  container.replaceChildren();
+  if(orderMode) {
+    C.jobs.forEach((job,index)=>{
+      const button=document.createElement('button');
+      button.className='order';
+      button.disabled=!C.unlocked(profile,index);
+      const name=document.createElement('b'), rating=document.createElement('small');
+      name.textContent=(index+1)+'. '+job.name;
+      rating.textContent=button.disabled?'Locked':profile.best[index]?'★'.repeat(profile.best[index]):'Ready';
+      button.append(name,rating);
+      button.onclick=()=>{
+        byId('menu').close();
+        if(index!==parcel.job) resetParcel(index);
+      };
+      container.append(button);
+    });
+    return;
+  }
+  C.papers.forEach((paper,index)=>{
+    const button=document.createElement('button');
+    button.className='swatch';
+    button.disabled=!C.canUsePaper(profile,index);
+    button.setAttribute('aria-pressed',String(parcel.paper===index));
+    const sample=document.createElement('i'), name=document.createElement('b'), label=document.createElement('small');
+    sample.style.setProperty('--color',paper.base);
+    name.textContent=paper.name;
+    label.textContent=parcel.paper===index?'In use':button.disabled?paper.earned+' stars':'Ready';
+    button.append(sample,name,label);
+    button.onclick=()=>{
+      if(parcel.seal) { byId('menu').close();announce('Start a new parcel to change paper.'); return; }
+      parcel.paper=index;
+      notes('select');
+      persist();
+      byId('menu').close();
+      update();
+    };
+    container.append(button);
+  });
+  const support=host?.support();
+  if(support?.like || support?.comment) {
+    const hint=document.createElement('p');
+    hint.className='hint';
+    const options=[];
+    if(support.like) options.push('A confirmed GameWave like unlocks Blue Porcelain.');
+    if(support.comment) options.push('A confirmed GameWave comment unlocks Berry Foil.');
+    hint.textContent=options.join(' ')+' You can also earn both papers with stars.';
+    container.append(hint);
+  }
+}
+
+function openMenu(mode) {
+  cancelGesture();
+  menuMode=mode;
+  fillMenu();
+  byId('menu').showModal();
+}
+
+function cancelGesture() {
+  if(!gesture) return;
+  if(gesture.flap!==null) animate(gesture.flap,0,160);
+  gesture=undefined;
+  byId('heldSeal').hidden=true;
+}
+
+function bindGesture(button,flap) {
+  button.onpointerdown=e=>{
+    if(e.button!==0 || gesture) return;
+    gesture={id:e.pointerId,flap,x:e.clientX,y:e.clientY,amount:0,moved:false};
+    if(flap!==null) animations=animations.filter(a=>a.flap!==flap);
+    button.setPointerCapture(e.pointerId);
+  };
+  button.onpointermove=e=>{
+    if(gesture?.id!==e.pointerId || gesture.flap!==flap) return;
+    const dx=e.clientX-gesture.x, dy=e.clientY-gesture.y;
+    gesture.moved ||= Math.hypot(dx,dy)>8;
+    if(flap===null) {
+      if(!gesture.moved) return;
+      const held=byId('heldSeal');
+      held.hidden=false;held.style.left=e.clientX+'px';held.style.top=e.clientY+'px';
+      return;
+    }
+    const [x,y]=table.marker(C.jobs[parcel.job],flap), [tx,ty]=table.target(C.jobs[parcel.job]);
+    const distance=Math.hypot(tx-x,ty-y);
+    gesture.amount=(dx*(tx-x)+dy*(ty-y))/Math.max(1,distance);
+    values[flap]=Math.max(0,Math.min(.89,gesture.amount/Math.max(26,distance*.77)));
+    requestDraw();
+  };
+  button.onpointerup=e=>{
+    if(gesture?.id!==e.pointerId || gesture.flap!==flap) return;
+    const {moved,amount}=gesture;
+    gesture=undefined;
+    byId('heldSeal').hidden=true;
+    if(flap!==null) {
+      if(!moved || amount>=15) commitFold(flap);
+      else animate(flap,0,160);
+      return;
+    }
+    if(!moved) { commitSeal(0,0); return; }
+    const rect=byId('desk').getBoundingClientRect(), [x,y]=table.target(C.jobs[parcel.job]);
+    commitSeal((e.clientX-rect.left-x)/table.scale,(e.clientY-rect.top-y)/table.scale);
+  };
+  button.onpointercancel=cancelGesture;
+  button.onlostpointercapture=e=>{if(gesture?.id===e.pointerId) cancelGesture();};
+  button.onclick=e=>{
+    if(e.detail!==0) return;
+    if(flap===null) commitSeal(0,0); else commitFold(flap);
+  };
+}
+
+const flapButtons=C.symbols.map((label,index)=>{
+  const button=document.createElement('button');
+  button.className='flap';
+  button.textContent=C.glyphs[index];
+  button.setAttribute('aria-label','Fold '+label);
+  byId('flaps').append(button);
+  bindGesture(button,index);
+  return button;
+});
+bindGesture(byId('stamp'),null);
+byId('orders').onclick=()=>openMenu('orders');
+byId('paper').onclick=()=>openMenu('paper');
+byId('close').onclick=()=>byId('menu').close();
+byId('restart').onclick=()=>resetParcel(parcel.job,true);
+byId('receipt').onclick=showResult;
+byId('back').onclick=()=>byId('result').close();
+byId('again').onclick=()=>{ byId('result').close();resetParcel(parcel.job,true); };
+byId('next').onclick=()=>{
+  byId('result').close();
+  if(parcel.job<C.jobs.length-1) resetParcel(parcel.job+1);
+  else openMenu('orders');
+};
+byId('sound').onclick=()=>{profile.mute=!profile.mute;persist();update();notes('select');};
+new ResizeObserver(positionControls).observe(byId('desk'));
+window.addEventListener('pagehide',()=>{cancelGesture();host.stop();});
+window.addEventListener('pageshow',event=>{if(event.persisted)host=makeHost();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelGesture();});
+
+host=makeHost();
+update();
+
+})();</script>
+</body></html>
